@@ -1,0 +1,20 @@
+# Dependências — serão reinstaladas dentro do container
+node_modules/
+ 
+# Build anterior — será gerado dentro do container
+dist/
+ 
+# Variáveis de ambiente — NUNCA dentro da imagem
+.env
+.env.*
+ 
+# Git
+.git/
+.gitignore
+ 
+# Arquivos de desenvolvimento
+README.md
+*.md
+coverage/
+.eslintrc.js
+.prettierrc

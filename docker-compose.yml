@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # ── Serviço 1: Banco de dados ─────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: taskdb
+    environment:
+      POSTGRES_USER: ${DB_USERNAME} # lê do .env
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # persiste dados
+    networks:
+      - task-network
+    healthcheck: # API só sobe após banco estar pronto
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      interval: 5s
+      retries: 5
+
+  # ── Serviço 2: API NestJS ─────────────────
+  api:
+    build:
+      context: . # usa o Dockerfile da raiz
+      target: runner
+    container_name: task-api
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env # injeta variáveis em runtime
+    environment:
+      DB_HOST: postgres # nome do serviço = hostname na rede
+    depends_on:
+      postgres:
+        condition: service_healthy # aguarda healthcheck passar
+    networks:
+      - task-network
+
+# ── Volumes persistentes ───────────────────
+volumes:
+  postgres_data:
+
+# ── Rede interna ───────────────────────────
+networks:
+  task-network:
+    driver: bridge
